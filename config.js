@@ -1,23 +1,23 @@
 // Configuration for the schedule site.
 //
-// 1. In Google Sheets: File > Share > "Anyone with the link" (Viewer).
-// 2. Get your Sheet ID from the URL:
-//    https://docs.google.com/spreadsheets/d/SHEET_ID_HERE/edit
-// 3. Find the GID of the specific tab/sheet you want (visible in the URL
-//    after "gid=" when that tab is selected).
-// 4. Paste both values below.
+// The sheet must be shared as "Anyone with the link" (Viewer) in Google
+// Sheets: Share > General access > Anyone with the link.
 //
-// Expected columns in the sheet (first row = headers, exact names matter):
-//   Date | Time | Home Team | Away Team | Location | Division
+// SHEET_ID comes from the sheet's URL:
+//   https://docs.google.com/spreadsheets/d/SHEET_ID_HERE/edit
 //
-// Example row:
-//   2026-09-12 | 6:00 PM | Sharks | Eagles | Field 3 | U10
+// GID selects a specific tab (visible in the URL as "#gid=..." once that
+// tab is selected). Leave empty to use the default/first tab.
+//
+// This site is built for a specific league-schedule layout: one row per
+// team, with repeating week blocks of four columns (Loc, Opponent, Day,
+// Time) grouped under club/venue header rows. See app.js for the parser.
 
 const CONFIG = {
-  SHEET_ID: "YOUR_SHEET_ID_HERE",
-  GID: "0",
+  SHEET_ID: "1FHpwECXTL9IcDBE6qKCuv4FUvPFMWRD9Nr5l4N664tE",
+  GID: "",
 };
 
-// Built from the values above — the CSV export endpoint requires no API key
-// as long as the sheet is shared as "Anyone with the link can view".
-CONFIG.CSV_URL = `https://docs.google.com/spreadsheets/d/${CONFIG.SHEET_ID}/export?format=csv&gid=${CONFIG.GID}`;
+CONFIG.CSV_URL = CONFIG.GID
+  ? `https://docs.google.com/spreadsheets/d/${CONFIG.SHEET_ID}/export?format=csv&gid=${CONFIG.GID}`
+  : `https://docs.google.com/spreadsheets/d/${CONFIG.SHEET_ID}/export?format=csv`;

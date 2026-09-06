@@ -14,24 +14,29 @@
 
   <main>
     <div class="controls">
-      <select id="division-filter">
-        <option value="">All Divisions</option>
+      <select id="club-filter">
+        <option value="">All Clubs</option>
       </select>
-      <input id="search-input" type="text" placeholder="Search team or location…" />
+      <select id="team-filter">
+        <option value="">Select a team…</option>
+      </select>
+      <input id="search-input" type="text" placeholder="Search team, opponent, or venue…" />
     </div>
 
     <p id="status" class="status info" hidden></p>
+
+    <h2 id="team-heading">Select a team above to see its schedule, or search all games.</h2>
 
     <div class="table-wrap">
       <table>
         <thead>
           <tr>
-            <th>Date</th>
+            <th>Week</th>
+            <th>Day</th>
             <th>Time</th>
-            <th>Home Team</th>
-            <th>Away Team</th>
+            <th>Home/Away</th>
+            <th>Opponent</th>
             <th>Location</th>
-            <th>Division</th>
           </tr>
         </thead>
         <tbody id="schedule-body"></tbody>

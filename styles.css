@@ -122,6 +122,40 @@ td.empty {
   padding: 2rem;
 }
 
+#team-heading {
+  font-size: 1.1rem;
+  color: var(--green-dark);
+  margin: 1rem 0 0.75rem;
+}
+
+.badge {
+  display: inline-block;
+  padding: 0.2rem 0.6rem;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.badge.home {
+  background: #e8f3ec;
+  color: var(--green-dark);
+}
+
+.badge.away {
+  background: #eef1fb;
+  color: #3b4bb8;
+}
+
+.badge.bye {
+  background: #f1f1f1;
+  color: var(--muted);
+}
+
+.badge.other {
+  background: #f1f1f1;
+  color: var(--muted);
+}
+
 footer {
   text-align: center;
   color: var(--muted);
