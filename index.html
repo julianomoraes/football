@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Youth Football League Schedule</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header>
+    <h1>🏈 Youth Football League</h1>
+    <p>Game Schedule</p>
+  </header>
+
+  <main>
+    <div class="controls">
+      <select id="division-filter">
+        <option value="">All Divisions</option>
+      </select>
+      <input id="search-input" type="text" placeholder="Search team or location…" />
+    </div>
+
+    <p id="status" class="status info" hidden></p>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Time</th>
+            <th>Home Team</th>
+            <th>Away Team</th>
+            <th>Location</th>
+            <th>Division</th>
+          </tr>
+        </thead>
+        <tbody id="schedule-body"></tbody>
+      </table>
+    </div>
+  </main>
+
+  <footer>
+    Schedule data synced from Google Sheets.
+  </footer>
+
+  <script src="config.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
