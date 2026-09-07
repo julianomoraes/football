@@ -38,6 +38,21 @@ lookup so away games can show the opponent's venue.
 If your sheet's layout differs, adjust `parseLeagueGrid` in `app.js`
 accordingly.
 
+## URLs
+
+Picking a team updates the URL to `/football/<TEAM_CODE>/<DIVISION>` (e.g.
+`/football/CCW/12U`, `/football/ALV-Navy/Flex` — spaces become dashes). A
+search term rides along as `?q=`. Refreshing, bookmarking, or sharing that
+URL restores the same view.
+
+GitHub Pages only serves static files, so there's no real server-side route
+for those pretty URLs — a direct hit or hard refresh on one would normally
+404. `404.html` catches that and redirects to `index.html` with the
+intended path stashed in `?redirect=`, which `app.js` restores via
+`history.replaceState` before rendering (`normalizeRedirectedUrl` /
+`restoreFromUrl`). If you rename the repo/site, update `BASE_PATH` in
+`app.js` and the path prefix in `404.html` to match.
+
 ## Setup
 
 1. Share the sheet: **File → Share → General access → Anyone with the

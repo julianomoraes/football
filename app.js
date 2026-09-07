@@ -29,6 +29,11 @@ const MONTH_ABBR = [
   "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
 ];
 
+// This site lives at https://<user>.github.io/football/ — a GitHub Pages
+// project site, so every "pretty" URL we generate needs this prefix.
+// Update if the repo/site is ever renamed.
+const BASE_PATH = "/football";
+
 const statusEl = document.getElementById("status");
 const clubFilter = document.getElementById("club-filter");
 const teamFilter = document.getElementById("team-filter");
@@ -44,6 +49,8 @@ let clubByTeamCode = new Map(); // team code (e.g. "ALV Navy") -> club full name
 init();
 
 async function init() {
+  normalizeRedirectedUrl();
+
   if (!CONFIG.SHEET_ID || CONFIG.SHEET_ID === "YOUR_SHEET_ID_HERE") {
     showStatus(
       "No Google Sheet configured yet. Edit config.js and set SHEET_ID.",
@@ -488,30 +495,82 @@ function hideStatus() {
   statusEl.hidden = true;
 }
 
-// Reflects the current club/team/search selection into the URL (via
-// replaceState, so it doesn't spam browser history) so a page refresh or a
-// shared link lands back on the same view.
+// Turns "ALV Navy" into "ALV-Navy" (URL-safe, and readable). Team codes and
+// divisions in this sheet never contain a literal "-", so the reverse
+// mapping in unslugify() below is unambiguous.
+function slugify(str) {
+  return encodeURIComponent(str.trim().replace(/\s+/g, "-"));
+}
+
+function unslugify(str) {
+  return decodeURIComponent(str).replace(/-/g, " ");
+}
+
+// Reflects the current team selection into the URL as a path —
+// /football/<team-code>/<division> — via replaceState (so it doesn't spam
+// browser history), so a refresh, bookmark, or shared link lands back on
+// the same schedule. The search box still rides along as ?q=.
 function syncUrl() {
+  const teamKey = teamFilter.value;
+  const q = searchInput.value.trim();
+
+  let path = `${BASE_PATH}/`;
+  if (teamKey) {
+    const [teamCode, division] = teamKey.split("::");
+    path = `${BASE_PATH}/${slugify(teamCode)}/${slugify(division)}`;
+  }
+
   const params = new URLSearchParams();
-  if (clubFilter.value) params.set("club", clubFilter.value);
-  if (teamFilter.value) params.set("team", teamFilter.value);
-  if (searchInput.value.trim()) params.set("q", searchInput.value.trim());
+  if (q) params.set("q", q);
+  // No team picked yet — still let a club-only view be bookmarkable.
+  if (!teamKey && clubFilter.value) params.set("club", clubFilter.value);
 
   const qs = params.toString();
-  const newUrl = qs ? `${location.pathname}?${qs}` : location.pathname;
-  history.replaceState(null, "", newUrl);
+  history.replaceState(null, "", qs ? `${path}?${qs}` : path);
 }
 
 function restoreFromUrl() {
   const params = new URLSearchParams(location.search);
-  const club = params.get("club") || "";
-  const team = params.get("team") || "";
   const q = params.get("q") || "";
+
+  let pathname = location.pathname;
+  if (pathname.startsWith(BASE_PATH)) pathname = pathname.slice(BASE_PATH.length);
+  const segments = pathname.split("/").filter(Boolean);
+
+  let club = "";
+  let teamKey = "";
+
+  if (segments.length >= 2) {
+    const teamCode = unslugify(segments[0]);
+    const division = unslugify(segments[1]);
+    teamKey = `${teamCode}::${division}`;
+    club = clubByTeamCode.get(teamCode) || "";
+  } else {
+    // No path segments — fall back to the older ?club=&team= scheme so any
+    // links shared before the path-based URLs still resolve.
+    club = params.get("club") || "";
+    teamKey = params.get("team") || "";
+  }
 
   if (club) clubFilter.value = club;
   populateTeamFilter(); // rebuild team options for the (possibly restored) club
-  if (team) teamFilter.value = team;
+  if (teamKey) teamFilter.value = teamKey;
   if (q) searchInput.value = q;
+}
+
+// GitHub Pages has no real server-side routing, so a direct hit on
+// /football/CCW/12U 404s (no such file exists). 404.html catches that and
+// redirects here with the intended path stashed in ?redirect=; this
+// restores the pretty URL via replaceState before restoreFromUrl() reads it.
+function normalizeRedirectedUrl() {
+  const params = new URLSearchParams(location.search);
+  const redirect = params.get("redirect");
+  if (redirect == null) return;
+
+  params.delete("redirect");
+  const newPath = `${BASE_PATH}/${redirect}`.replace(/\/{2,}/g, "/");
+  const qs = params.toString();
+  history.replaceState(null, "", qs ? `${newPath}?${qs}` : newPath);
 }
 
 clubFilter.addEventListener("change", () => {

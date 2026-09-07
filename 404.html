@@ -1,0 +1,19 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Redirecting…</title>
+  <script>
+    // GitHub Pages serves static files only — there's no server-side route
+    // for pretty URLs like /football/CCW/12U, so a direct hit or a hard
+    // refresh on one lands here. Redirect back to index.html with the
+    // intended path stashed in ?redirect=, which app.js then restores via
+    // history.replaceState before rendering. See app.js's
+    // normalizeRedirectedUrl() / restoreFromUrl().
+    var path = location.pathname.replace(/^\/football\/?/, "");
+    var query = location.search ? location.search.replace(/^\?/, "&") : "";
+    location.replace("/football/?redirect=" + encodeURIComponent(path) + query);
+  </script>
+</head>
+<body></body>
+</html>
