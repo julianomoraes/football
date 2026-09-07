@@ -127,6 +127,20 @@ tr:last-child td {
   border-bottom: none;
 }
 
+tr.past {
+  background: #f7f7f7;
+  color: var(--muted);
+}
+
+tr.past td a {
+  color: var(--muted);
+}
+
+tr.next-game td {
+  background: #fff9e8;
+  font-weight: 600;
+}
+
 td.empty {
   text-align: center;
   color: var(--muted);

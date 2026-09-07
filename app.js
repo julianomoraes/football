@@ -282,20 +282,55 @@ function formatDate(month, day) {
 }
 
 // A week label carries every date the week could land on; the game's own
-// Day field ("Sun"/"Sat") tells us which one actually applies.
-function resolveGameDate(weekLabel, dayText) {
+// Day field ("Sun"/"Sat") tells us which one actually applies. Returns
+// {month, day} in calendar terms, or null if the label couldn't be parsed.
+function resolveGameDay(weekLabel, dayText) {
   const parsed = parseWeekLabel(weekLabel);
-  if (!parsed) return weekLabel;
+  if (!parsed) return null;
 
   const dayPrefix = (dayText || "").trim().slice(0, 3).toLowerCase();
   for (const d of parsed.days) {
     if (dayPrefix && weekdayOf(parsed.month, d).toLowerCase().startsWith(dayPrefix)) {
-      return formatDate(parsed.month, d);
+      return { month: parsed.month, day: d };
     }
   }
 
   // Day text didn't match any candidate (typo, TBD, etc.) — best guess.
-  return formatDate(parsed.month, parsed.days[0]);
+  return { month: parsed.month, day: parsed.days[0] };
+}
+
+function resolveGameDate(weekLabel, dayText) {
+  const resolved = resolveGameDay(weekLabel, dayText);
+  return resolved ? formatDate(resolved.month, resolved.day) : weekLabel;
+}
+
+// Parses "8:00am" / "10:45am" style times into {hour, minute} (24h). Returns
+// null for anything unparseable (blank, "TBD", etc.).
+function parseTime(timeText) {
+  const m = (timeText || "").trim().match(/^(\d{1,2}):(\d{2})\s*([ap]m)$/i);
+  if (!m) return null;
+  let hour = parseInt(m[1], 10);
+  const minute = parseInt(m[2], 10);
+  const ampm = m[3].toLowerCase();
+  if (ampm === "pm" && hour !== 12) hour += 12;
+  if (ampm === "am" && hour === 12) hour = 0;
+  return { hour, minute };
+}
+
+// Best-effort kickoff Date for a game, used only to compare against "now" —
+// unparseable times default to end-of-day so the game isn't marked past
+// while its date is still today.
+function gameDateTime(game) {
+  const resolved = resolveGameDay(game.weekLabel, game.day);
+  if (!resolved) return null;
+  const time = parseTime(game.time);
+  return new Date(
+    SEASON_YEAR,
+    resolved.month - 1,
+    resolved.day,
+    time ? time.hour : 23,
+    time ? time.minute : 59
+  );
 }
 
 function populateClubFilter() {
@@ -397,27 +432,42 @@ function render() {
     return;
   }
 
-  games
-    .sort((a, b) => a.week - b.week)
-    .forEach((g) => {
-      const tr = document.createElement("tr");
-      const badge = g.isBye
-        ? '<span class="badge bye">BYE</span>'
-        : g.homeAway === "home"
-        ? '<span class="badge home">Home</span>'
-        : g.homeAway === "away"
-        ? '<span class="badge away">Away</span>'
-        : '<span class="badge other">—</span>';
+  games.sort((a, b) => a.week - b.week);
 
-      tr.innerHTML = `
-        <td>${escapeHtml(resolveGameDate(g.weekLabel, g.day))}</td>
-        <td>${escapeHtml(g.time)}</td>
-        <td>${badge}</td>
-        <td>${g.isBye ? "—" : escapeHtml(formatOpponent(g.opponent))}</td>
-        <td>${renderLocationCell(resolveLocation(g))}</td>
-      `;
-      scheduleBody.appendChild(tr);
-    });
+  const now = new Date();
+  // Only meaningful for a single team's own timeline — mark the first game
+  // that hasn't happened yet so it's easy to spot at a glance.
+  const nextGameIndex = team
+    ? games.findIndex((g) => {
+        const dt = gameDateTime(g);
+        return dt && dt >= now;
+      })
+    : -1;
+
+  games.forEach((g, i) => {
+    const tr = document.createElement("tr");
+    const dt = gameDateTime(g);
+    const isPast = dt && dt < now;
+    if (isPast) tr.classList.add("past");
+    if (i === nextGameIndex) tr.classList.add("next-game");
+
+    const badge = g.isBye
+      ? '<span class="badge bye">BYE</span>'
+      : g.homeAway === "home"
+      ? '<span class="badge home">Home</span>'
+      : g.homeAway === "away"
+      ? '<span class="badge away">Away</span>'
+      : '<span class="badge other">—</span>';
+
+    tr.innerHTML = `
+      <td>${escapeHtml(resolveGameDate(g.weekLabel, g.day))}</td>
+      <td>${escapeHtml(g.time)}</td>
+      <td>${badge}</td>
+      <td>${g.isBye ? "—" : escapeHtml(formatOpponent(g.opponent))}</td>
+      <td>${renderLocationCell(resolveLocation(g))}</td>
+    `;
+    scheduleBody.appendChild(tr);
+  });
 }
 
 function escapeHtml(str) {
