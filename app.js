@@ -45,6 +45,27 @@ let teamsByClub = new Map(); // club -> [{team, division, venue}]
 let venueByTeam = new Map(); // team code -> home venue
 let clubByTeamCode = new Map(); // team code (e.g. "ALV Navy") -> club full name (e.g. "Alvarez")
 
+// If Google Sheets is unreachable (outage, rate limit, offline), fall back
+// to the last successfully fetched copy rather than showing a blank page.
+const CACHE_KEY = "football-schedule-csv-cache";
+
+function loadCache() {
+  try {
+    const raw = localStorage.getItem(CACHE_KEY);
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    return null; // localStorage disabled/unavailable — just skip caching
+  }
+}
+
+function saveCache(csvText) {
+  try {
+    localStorage.setItem(CACHE_KEY, JSON.stringify({ csvText, fetchedAt: Date.now() }));
+  } catch {
+    // Storage full/disabled — caching is a nice-to-have, fail silently.
+  }
+}
+
 init();
 
 async function init() {
@@ -58,9 +79,31 @@ async function init() {
     return;
   }
 
+  let csvText;
+  let usedCache = false;
+
   try {
     showStatus("Loading schedule…", "info");
-    const csvText = await fetchCsv(CONFIG.CSV_URL);
+    csvText = await fetchCsv(CONFIG.CSV_URL);
+    saveCache(csvText);
+  } catch (err) {
+    console.error("Live fetch failed, trying cached copy:", err);
+    const cached = loadCache();
+    if (cached) {
+      csvText = cached.csvText;
+      usedCache = true;
+    } else {
+      showStatus(
+        "Couldn't load the schedule. Make sure the sheet is shared as " +
+          "'Anyone with the link can view', and that SHEET_ID in config.js " +
+          "is correct.",
+        "error"
+      );
+      return;
+    }
+  }
+
+  try {
     const rows = parseCsv(csvText);
     const parsed = parseLeagueGrid(rows);
     allGames = parsed.games;
@@ -76,15 +119,17 @@ async function init() {
     populateClubFilter();
     restoreFromUrl();
     render();
-    hideStatus();
+
+    if (usedCache) {
+      const cached = loadCache();
+      const when = cached ? new Date(cached.fetchedAt).toLocaleString() : "an earlier visit";
+      showStatus(`Showing cached schedule from ${when} — couldn't reach Google Sheets just now.`, "warning");
+    } else {
+      hideStatus();
+    }
   } catch (err) {
     console.error(err);
-    showStatus(
-      "Couldn't load the schedule. Make sure the sheet is shared as " +
-        "'Anyone with the link can view', and that SHEET_ID in config.js " +
-        "is correct.",
-      "error"
-    );
+    showStatus("Something went wrong rendering the schedule.", "error");
   }
 }
 
