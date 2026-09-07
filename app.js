@@ -172,8 +172,13 @@ function parseLeagueGrid(rows) {
     const team = col2;
     if (!team) continue; // blank separator / stray note row
 
+    // A team code alone isn't unique — e.g. Coyote Creek uses "CCW" for its
+    // 8U through 13U squads, distinguished only by division. Use team+division
+    // as the real identity for dropdown/filtering purposes.
+    const teamKey = `${team}::${division}`;
+
     if (!teamsByClub.has(currentClub)) teamsByClub.set(currentClub, []);
-    teamsByClub.get(currentClub).push({ team, division, venue: currentVenue });
+    teamsByClub.get(currentClub).push({ teamKey, team, division, venue: currentVenue });
     if (!venueByTeam.has(team)) venueByTeam.set(team, currentVenue);
 
     for (let w = 0; w < weekCount; w++) {
@@ -193,6 +198,7 @@ function parseLeagueGrid(rows) {
         venue: currentVenue,
         division,
         team,
+        teamKey,
         week: w,
         weekLabel: weekLabels[w],
         locRaw,
@@ -228,18 +234,17 @@ function populateTeamFilter() {
   teamsByClub.forEach((teams, c) => {
     if (club && c !== club) return;
     teams.forEach((t) => {
-      const key = `${t.team}`;
-      if (seen.has(key)) return;
-      seen.add(key);
+      if (seen.has(t.teamKey)) return;
+      seen.add(t.teamKey);
       entries.push(t);
     });
   });
 
   entries
-    .sort((a, b) => a.team.localeCompare(b.team))
+    .sort((a, b) => a.team.localeCompare(b.team) || a.division.localeCompare(b.division))
     .forEach((t) => {
       const opt = document.createElement("option");
-      opt.value = t.team;
+      opt.value = t.teamKey;
       opt.textContent = t.division ? `${t.team} (${t.division})` : t.team;
       teamFilter.appendChild(opt);
     });
@@ -268,8 +273,9 @@ function render() {
 
   let games;
   if (team) {
-    games = allGames.filter((g) => g.team === team);
-    teamHeading.textContent = `Schedule — ${team}`;
+    games = allGames.filter((g) => g.teamKey === team);
+    const label = games[0] ? `${games[0].team} (${games[0].division})` : team;
+    teamHeading.textContent = `Schedule — ${label}`;
   } else {
     games = allGames.filter((g) => {
       const haystack = `${g.team} ${g.opponent} ${g.venue} ${g.club}`.toLowerCase();
