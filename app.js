@@ -68,7 +68,7 @@ async function init() {
     }
 
     populateClubFilter();
-    populateTeamFilter();
+    restoreFromUrl();
     render();
     hideStatus();
   } catch (err) {
@@ -488,9 +488,42 @@ function hideStatus() {
   statusEl.hidden = true;
 }
 
+// Reflects the current club/team/search selection into the URL (via
+// replaceState, so it doesn't spam browser history) so a page refresh or a
+// shared link lands back on the same view.
+function syncUrl() {
+  const params = new URLSearchParams();
+  if (clubFilter.value) params.set("club", clubFilter.value);
+  if (teamFilter.value) params.set("team", teamFilter.value);
+  if (searchInput.value.trim()) params.set("q", searchInput.value.trim());
+
+  const qs = params.toString();
+  const newUrl = qs ? `${location.pathname}?${qs}` : location.pathname;
+  history.replaceState(null, "", newUrl);
+}
+
+function restoreFromUrl() {
+  const params = new URLSearchParams(location.search);
+  const club = params.get("club") || "";
+  const team = params.get("team") || "";
+  const q = params.get("q") || "";
+
+  if (club) clubFilter.value = club;
+  populateTeamFilter(); // rebuild team options for the (possibly restored) club
+  if (team) teamFilter.value = team;
+  if (q) searchInput.value = q;
+}
+
 clubFilter.addEventListener("change", () => {
   populateTeamFilter();
   render();
+  syncUrl();
 });
-teamFilter.addEventListener("change", render);
-searchInput.addEventListener("input", render);
+teamFilter.addEventListener("change", () => {
+  render();
+  syncUrl();
+});
+searchInput.addEventListener("input", () => {
+  render();
+  syncUrl();
+});
