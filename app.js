@@ -17,6 +17,18 @@
 // repeat per week: Loc ("vs"/"at" [+ optional venue code]), Opponent, Day,
 // Time.
 
+// Week labels list every date the week could fall on (e.g. "Week 4
+// (9/19,20)" — Sat the 19th or Sun the 20th, depending on the team's
+// division). Since each game row also records its actual weekday, we can
+// resolve that down to one specific calendar date. Update this if the site
+// is ever reused for a different season.
+const SEASON_YEAR = 2026;
+const WEEKDAY_ABBR = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+const MONTH_ABBR = [
+  "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+  "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
+];
+
 const statusEl = document.getElementById("status");
 const clubFilter = document.getElementById("club-filter");
 const teamFilter = document.getElementById("team-filter");
@@ -243,6 +255,49 @@ function formatOpponent(opponent) {
   return opponent.split("/").map(formatOpponentCode).join(" / ");
 }
 
+// Pulls {month, days: [...]} out of a week label like "Week 4 (9/19,20)".
+// Handles the occasional sheet typo where a day got an extra digit (e.g.
+// "10/10,111" meaning the 11th) by subtracting 100 from anything > 31.
+function parseWeekLabel(label) {
+  const m = label.match(/\((\d{1,2})\/([\d,]+)\)/);
+  if (!m) return null;
+  const month = parseInt(m[1], 10);
+  const days = m[2]
+    .split(",")
+    .map((s) => {
+      let d = parseInt(s, 10);
+      if (d > 31) d -= 100;
+      return d;
+    })
+    .filter((d) => d >= 1 && d <= 31);
+  return days.length ? { month, days } : null;
+}
+
+function weekdayOf(month, day) {
+  return WEEKDAY_ABBR[new Date(SEASON_YEAR, month - 1, day).getDay()];
+}
+
+function formatDate(month, day) {
+  return `${weekdayOf(month, day)}, ${MONTH_ABBR[month - 1]} ${day}`;
+}
+
+// A week label carries every date the week could land on; the game's own
+// Day field ("Sun"/"Sat") tells us which one actually applies.
+function resolveGameDate(weekLabel, dayText) {
+  const parsed = parseWeekLabel(weekLabel);
+  if (!parsed) return weekLabel;
+
+  const dayPrefix = (dayText || "").trim().slice(0, 3).toLowerCase();
+  for (const d of parsed.days) {
+    if (dayPrefix && weekdayOf(parsed.month, d).toLowerCase().startsWith(dayPrefix)) {
+      return formatDate(parsed.month, d);
+    }
+  }
+
+  // Day text didn't match any candidate (typo, TBD, etc.) — best guess.
+  return formatDate(parsed.month, parsed.days[0]);
+}
+
 function populateClubFilter() {
   const clubs = [...teamsByClub.keys()].filter(Boolean).sort();
   clubs.forEach((c) => {
@@ -337,7 +392,7 @@ function render() {
 
   if (games.length === 0) {
     const tr = document.createElement("tr");
-    tr.innerHTML = `<td colspan="6" class="empty">No games match.</td>`;
+    tr.innerHTML = `<td colspan="5" class="empty">No games match.</td>`;
     scheduleBody.appendChild(tr);
     return;
   }
@@ -355,8 +410,7 @@ function render() {
         : '<span class="badge other">—</span>';
 
       tr.innerHTML = `
-        <td>${escapeHtml(g.weekLabel)}</td>
-        <td>${escapeHtml(g.day)}</td>
+        <td>${escapeHtml(resolveGameDate(g.weekLabel, g.day))}</td>
         <td>${escapeHtml(g.time)}</td>
         <td>${badge}</td>
         <td>${g.isBye ? "—" : escapeHtml(formatOpponent(g.opponent))}</td>
