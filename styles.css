@@ -104,6 +104,17 @@ th, td {
   font-size: 0.95rem;
 }
 
+td a {
+  color: var(--green-dark);
+  text-decoration: none;
+  border-bottom: 1px dashed var(--green);
+}
+
+td a:hover {
+  text-decoration: none;
+  border-bottom-style: solid;
+}
+
 th {
   background: #eef4ef;
   color: var(--green-dark);

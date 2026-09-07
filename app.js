@@ -27,6 +27,7 @@ const teamHeading = document.getElementById("team-heading");
 let allGames = [];
 let teamsByClub = new Map(); // club -> [{team, division, venue}]
 let venueByTeam = new Map(); // team code -> home venue
+let clubByTeamCode = new Map(); // team code (e.g. "ALV Navy") -> club full name (e.g. "Alvarez")
 
 init();
 
@@ -47,6 +48,7 @@ async function init() {
     allGames = parsed.games;
     teamsByClub = parsed.teamsByClub;
     venueByTeam = parsed.venueByTeam;
+    clubByTeamCode = parsed.clubByTeamCode;
 
     if (allGames.length === 0) {
       showStatus("The sheet loaded but no games were found.", "warning");
@@ -127,7 +129,9 @@ function cell(row, i) {
 // Turns the raw grid rows into a flat list of {club, venue, division, team,
 // week, weekLabel, homeAway, opponent, day, time, isBye} game records.
 function parseLeagueGrid(rows) {
-  if (rows.length < 2) return { games: [], teamsByClub: new Map(), venueByTeam: new Map() };
+  if (rows.length < 2) {
+    return { games: [], teamsByClub: new Map(), venueByTeam: new Map(), clubByTeamCode: new Map() };
+  }
 
   // Count week blocks using the first club header row (has literal "Loc"
   // repeated every 4 columns starting at column D).
@@ -143,6 +147,7 @@ function parseLeagueGrid(rows) {
   const games = [];
   const teamsByClub = new Map();
   const venueByTeam = new Map();
+  const clubByTeamCode = new Map();
 
   let currentClub = "";
   let currentVenue = "";
@@ -180,6 +185,7 @@ function parseLeagueGrid(rows) {
     if (!teamsByClub.has(currentClub)) teamsByClub.set(currentClub, []);
     teamsByClub.get(currentClub).push({ teamKey, team, division, venue: currentVenue });
     if (!venueByTeam.has(team)) venueByTeam.set(team, currentVenue);
+    if (currentClub && !clubByTeamCode.has(team)) clubByTeamCode.set(team, currentClub);
 
     for (let w = 0; w < weekCount; w++) {
       const base = 3 + w * 4;
@@ -211,7 +217,30 @@ function parseLeagueGrid(rows) {
     }
   }
 
-  return { games, teamsByClub, venueByTeam };
+  return { games, teamsByClub, venueByTeam, clubByTeamCode };
+}
+
+// Turns a raw opponent code (e.g. "ALV Navy", "CCW Red", or a "/"-separated
+// pair of possible opponents like "GYB/CSW") into a human-readable name
+// using the club names collected while parsing (e.g. "Alvarez Navy").
+// Codes we don't recognize (external teams, "BYE", "3PH -..." notes) are
+// left as-is.
+function formatOpponentCode(code) {
+  const trimmed = code.trim();
+  if (!trimmed) return trimmed;
+
+  const club = clubByTeamCode.get(trimmed);
+  if (!club) return trimmed;
+
+  const spaceIdx = trimmed.indexOf(" ");
+  const qualifier = spaceIdx === -1 ? "" : trimmed.slice(spaceIdx + 1).trim();
+  return qualifier ? `${club} ${qualifier}` : club;
+}
+
+function formatOpponent(opponent) {
+  if (!opponent) return opponent;
+  if (/^bye$/i.test(opponent)) return "BYE";
+  return opponent.split("/").map(formatOpponentCode).join(" / ");
 }
 
 function populateClubFilter() {
@@ -260,6 +289,21 @@ function resolveLocation(game) {
   return game.locRaw || "—";
 }
 
+// All venues in this league are Bay Area, CA schools/fields — appending the
+// state disambiguates the Google Maps search without us having to hardcode
+// (and risk getting wrong) each venue's exact street address.
+function mapsUrl(venueName) {
+  return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${venueName}, CA`)}`;
+}
+
+function renderLocationCell(locationText) {
+  const safeText = escapeHtml(locationText);
+  if (!locationText || locationText === "—" || locationText === "Away") {
+    return safeText;
+  }
+  return `<a href="${mapsUrl(locationText)}" target="_blank" rel="noopener noreferrer">${safeText}</a>`;
+}
+
 function render() {
   const team = teamFilter.value;
   const query = searchInput.value.trim().toLowerCase();
@@ -278,7 +322,7 @@ function render() {
     teamHeading.textContent = `Schedule — ${label}`;
   } else {
     games = allGames.filter((g) => {
-      const haystack = `${g.team} ${g.opponent} ${g.venue} ${g.club}`.toLowerCase();
+      const haystack = `${g.team} ${g.opponent} ${formatOpponent(g.opponent)} ${g.venue} ${g.club}`.toLowerCase();
       return haystack.includes(query);
     });
     teamHeading.textContent = `Search results for "${searchInput.value.trim()}"`;
@@ -315,8 +359,8 @@ function render() {
         <td>${escapeHtml(g.day)}</td>
         <td>${escapeHtml(g.time)}</td>
         <td>${badge}</td>
-        <td>${g.isBye ? "—" : escapeHtml(g.opponent)}</td>
-        <td>${escapeHtml(resolveLocation(g))}</td>
+        <td>${g.isBye ? "—" : escapeHtml(formatOpponent(g.opponent))}</td>
+        <td>${renderLocationCell(resolveLocation(g))}</td>
       `;
       scheduleBody.appendChild(tr);
     });
