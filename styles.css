@@ -49,17 +49,11 @@ main {
   margin-bottom: 1rem;
 }
 
-.controls select,
-.controls input {
+.controls select {
   padding: 0.5rem 0.75rem;
   border: 1px solid var(--border);
   border-radius: 6px;
   font-size: 0.95rem;
-}
-
-.controls input {
-  flex: 1;
-  min-width: 200px;
 }
 
 .status {

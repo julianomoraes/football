@@ -37,7 +37,6 @@ const BASE_PATH = "/football";
 const statusEl = document.getElementById("status");
 const clubFilter = document.getElementById("club-filter");
 const teamFilter = document.getElementById("team-filter");
-const searchInput = document.getElementById("search-input");
 const scheduleBody = document.getElementById("schedule-body");
 const teamHeading = document.getElementById("team-heading");
 
@@ -403,34 +402,17 @@ function renderLocationCell(locationText) {
 
 function render() {
   const team = teamFilter.value;
-  const query = searchInput.value.trim().toLowerCase();
 
   scheduleBody.innerHTML = "";
 
-  if (!team && !query) {
-    teamHeading.textContent = "Select a team above to see its schedule, or search all games.";
+  if (!team) {
+    teamHeading.textContent = "Select a team above to see its schedule.";
     return;
   }
 
-  let games;
-  if (team) {
-    games = allGames.filter((g) => g.teamKey === team);
-    const label = games[0] ? `${games[0].team} (${games[0].division})` : team;
-    teamHeading.textContent = `Schedule — ${label}`;
-  } else {
-    games = allGames.filter((g) => {
-      const haystack = `${g.team} ${g.opponent} ${formatOpponent(g.opponent)} ${g.venue} ${g.club}`.toLowerCase();
-      return haystack.includes(query);
-    });
-    teamHeading.textContent = `Search results for "${searchInput.value.trim()}"`;
-  }
-
-  if (query && team) {
-    games = games.filter((g) => {
-      const haystack = `${g.team} ${g.opponent} ${g.venue} ${g.club}`.toLowerCase();
-      return haystack.includes(query);
-    });
-  }
+  const games = allGames.filter((g) => g.teamKey === team);
+  const label = games[0] ? `${games[0].team} (${games[0].division})` : team;
+  teamHeading.textContent = `Schedule — ${label}`;
 
   if (games.length === 0) {
     const tr = document.createElement("tr");
@@ -509,10 +491,9 @@ function unslugify(str) {
 // Reflects the current team selection into the URL as a path —
 // /football/<team-code>/<division> — via replaceState (so it doesn't spam
 // browser history), so a refresh, bookmark, or shared link lands back on
-// the same schedule. The search box still rides along as ?q=.
+// the same schedule.
 function syncUrl() {
   const teamKey = teamFilter.value;
-  const q = searchInput.value.trim();
 
   let path = `${BASE_PATH}/`;
   if (teamKey) {
@@ -521,7 +502,6 @@ function syncUrl() {
   }
 
   const params = new URLSearchParams();
-  if (q) params.set("q", q);
   // No team picked yet — still let a club-only view be bookmarkable.
   if (!teamKey && clubFilter.value) params.set("club", clubFilter.value);
 
@@ -531,7 +511,6 @@ function syncUrl() {
 
 function restoreFromUrl() {
   const params = new URLSearchParams(location.search);
-  const q = params.get("q") || "";
 
   let pathname = location.pathname;
   if (pathname.startsWith(BASE_PATH)) pathname = pathname.slice(BASE_PATH.length);
@@ -555,7 +534,6 @@ function restoreFromUrl() {
   if (club) clubFilter.value = club;
   populateTeamFilter(); // rebuild team options for the (possibly restored) club
   if (teamKey) teamFilter.value = teamKey;
-  if (q) searchInput.value = q;
 }
 
 // GitHub Pages has no real server-side routing, so a direct hit on
@@ -579,10 +557,6 @@ clubFilter.addEventListener("change", () => {
   syncUrl();
 });
 teamFilter.addEventListener("change", () => {
-  render();
-  syncUrl();
-});
-searchInput.addEventListener("input", () => {
   render();
   syncUrl();
 });

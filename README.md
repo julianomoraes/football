@@ -11,8 +11,8 @@ https://julianomoraes.github.io/football/
 
 The site fetches the sheet's public CSV export
 (`.../export?format=csv`), parses it client-side, and renders a
-searchable, per-team schedule (`app.js`). Whenever the sheet is updated,
-reloading the page shows the latest schedule — no redeploy needed.
+per-team schedule (`app.js`). Whenever the sheet is updated, reloading the
+page shows the latest schedule — no redeploy needed.
 
 ## Expected sheet layout
 
@@ -41,9 +41,8 @@ accordingly.
 ## URLs
 
 Picking a team updates the URL to `/football/<TEAM_CODE>/<DIVISION>` (e.g.
-`/football/CCW/12U`, `/football/ALV-Navy/Flex` — spaces become dashes). A
-search term rides along as `?q=`. Refreshing, bookmarking, or sharing that
-URL restores the same view.
+`/football/CCW/12U`, `/football/ALV-Navy/Flex` — spaces become dashes).
+Refreshing, bookmarking, or sharing that URL restores the same view.
 
 GitHub Pages only serves static files, so there's no real server-side route
 for those pretty URLs — a direct hit or hard refresh on one would normally
