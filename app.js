@@ -29,10 +29,12 @@ const MONTH_ABBR = [
   "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
 ];
 
-// This site lives at https://<user>.github.io/football/ — a GitHub Pages
-// project site, so every "pretty" URL we generate needs this prefix.
-// Update if the repo/site is ever renamed.
-const BASE_PATH = "/football";
+// Every "pretty" URL we generate (/<base>/<team-code>/<division>) needs the
+// path this copy of the site is actually deployed under. Set
+// `window.APP_BASE_PATH` in index.html before this script loads if you're
+// hosting it somewhere other than the default GitHub Pages project path —
+// see README's "Hosting elsewhere" section.
+const BASE_PATH = window.APP_BASE_PATH || "/football";
 
 const statusEl = document.getElementById("status");
 const clubFilter = document.getElementById("club-filter");

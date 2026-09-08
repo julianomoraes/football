@@ -49,8 +49,26 @@ for those pretty URLs — a direct hit or hard refresh on one would normally
 404. `404.html` catches that and redirects to `index.html` with the
 intended path stashed in `?redirect=`, which `app.js` restores via
 `history.replaceState` before rendering (`normalizeRedirectedUrl` /
-`restoreFromUrl`). If you rename the repo/site, update `BASE_PATH` in
-`app.js` and the path prefix in `404.html` to match.
+`restoreFromUrl`).
+
+### Hosting elsewhere / at a different path
+
+`app.js` reads its base path from `window.APP_BASE_PATH`, falling back to
+`/football` if unset. To deploy this at a different path (a different repo
+name, or a subfolder on another host entirely), set that variable in
+`index.html` **before** `config.js`/`app.js` load:
+
+```html
+<script>window.APP_BASE_PATH = "/schedule";</script>
+<script src="config.js"></script>
+<script src="app.js"></script>
+```
+
+`app.js`, `config.js`, and `styles.css` need no other changes — only
+`index.html` (the base path) and `404.html` (the redirect target, and the
+regex it strips off `location.pathname`) differ per deployment. See
+`deploy/ccys/` for a working example of a second deployment at `/schedule`
+on a plain Apache host (Bluehost/WordPress).
 
 ## Setup
 
