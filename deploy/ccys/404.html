@@ -5,14 +5,14 @@
   <title>Redirecting…</title>
   <script>
     // Apache serves this page (via the ErrorDocument directive in this
-    // folder's .htaccess) whenever a pretty URL like /schedule/CCW/12U
+    // folder's .htaccess) whenever a pretty URL like /schedulev2/CCW/12U
     // doesn't correspond to a real file. Redirect back to index.html with
     // the intended path stashed in ?redirect=, which app.js restores via
     // history.replaceState before rendering. See app.js's
     // normalizeRedirectedUrl() / restoreFromUrl().
-    var path = location.pathname.replace(/^\/schedule\/?/, "");
+    var path = location.pathname.replace(/^\/schedulev2\/?/, "");
     var query = location.search ? location.search.replace(/^\?/, "&") : "";
-    location.replace("/schedule/?redirect=" + encodeURIComponent(path) + query);
+    location.replace("/schedulev2/?redirect=" + encodeURIComponent(path) + query);
   </script>
 </head>
 <body></body>
