@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Youth Football League Schedule</title>
+  <link rel="stylesheet" href="styles.css" />
+  <script>window.APP_BASE_PATH = "/schedule";</script>
+</head>
+<body>
+  <header>
+    <h1>🏈 Youth Football League</h1>
+    <p>Game Schedule</p>
+  </header>
+
+  <main>
+    <div class="controls">
+      <select id="club-filter">
+        <option value="">All Clubs</option>
+      </select>
+      <select id="team-filter">
+        <option value="">Select a team…</option>
+      </select>
+    </div>
+
+    <p id="status" class="status info" hidden></p>
+
+    <h2 id="team-heading">Select a team above to see its schedule.</h2>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Time</th>
+            <th>Home/Away</th>
+            <th>Opponent</th>
+            <th>Location</th>
+          </tr>
+        </thead>
+        <tbody id="schedule-body"></tbody>
+      </table>
+    </div>
+  </main>
+
+  <footer>
+    <p class="credit">Courtesy of NM18 · Coyote Creek</p>
+  </footer>
+
+  <script src="config.js?v=12"></script>
+  <script src="app.js?v=12"></script>
+</body>
+</html>

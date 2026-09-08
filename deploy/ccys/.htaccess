@@ -1,0 +1,5 @@
+# Upload this file into the /schedule/ folder itself (not the WordPress
+# root). It tells Apache to serve 404.html — with a 404 status, but the
+# browser's address bar keeps the originally requested URL — for any pretty
+# URL under /schedule/ that isn't a real file (e.g. /schedule/CCW/12U).
+ErrorDocument 404 /schedule/404.html

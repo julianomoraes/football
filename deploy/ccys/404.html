@@ -1,0 +1,19 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Redirecting…</title>
+  <script>
+    // Apache serves this page (via the ErrorDocument directive in this
+    // folder's .htaccess) whenever a pretty URL like /schedule/CCW/12U
+    // doesn't correspond to a real file. Redirect back to index.html with
+    // the intended path stashed in ?redirect=, which app.js restores via
+    // history.replaceState before rendering. See app.js's
+    // normalizeRedirectedUrl() / restoreFromUrl().
+    var path = location.pathname.replace(/^\/schedule\/?/, "");
+    var query = location.search ? location.search.replace(/^\?/, "&") : "";
+    location.replace("/schedule/?redirect=" + encodeURIComponent(path) + query);
+  </script>
+</head>
+<body></body>
+</html>

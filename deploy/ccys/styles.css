@@ -1,0 +1,187 @@
+:root {
+  --green: #1f7a3f;
+  --green-dark: #14532d;
+  --bg: #f5f7f5;
+  --card: #ffffff;
+  --text: #1a1a1a;
+  --muted: #667085;
+  --border: #e2e6e3;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+}
+
+header {
+  background: linear-gradient(135deg, var(--green), var(--green-dark));
+  color: white;
+  padding: 2rem 1.5rem;
+  text-align: center;
+}
+
+header h1 {
+  margin: 0 0 0.25rem;
+  font-size: 1.75rem;
+}
+
+header p {
+  margin: 0;
+  opacity: 0.9;
+}
+
+main {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 1.5rem 1.5rem 0.5rem;
+}
+
+.controls {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  margin-bottom: 1rem;
+}
+
+.controls select {
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-size: 0.95rem;
+}
+
+.status {
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  margin-bottom: 1rem;
+  font-size: 0.95rem;
+}
+
+.status.info {
+  background: #e8f3ec;
+  color: var(--green-dark);
+}
+
+.status.warning {
+  background: #fff4e5;
+  color: #8a5300;
+}
+
+.status.error {
+  background: #fdecea;
+  color: #a12622;
+}
+
+.table-wrap {
+  background: var(--card);
+  border-radius: 10px;
+  overflow-x: auto;
+  border: 1px solid var(--border);
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 600px;
+}
+
+th, td {
+  text-align: left;
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid var(--border);
+  font-size: 0.95rem;
+}
+
+td a {
+  color: var(--green-dark);
+  text-decoration: none;
+  border-bottom: 1px dashed var(--green);
+}
+
+td a:hover {
+  text-decoration: none;
+  border-bottom-style: solid;
+}
+
+th {
+  background: #eef4ef;
+  color: var(--green-dark);
+  font-weight: 600;
+  position: sticky;
+  top: 0;
+}
+
+tr:last-child td {
+  border-bottom: none;
+}
+
+tr.past {
+  background: #f7f7f7;
+  color: var(--muted);
+}
+
+tr.past td a {
+  color: var(--muted);
+}
+
+tr.next-game td {
+  background: #fff9e8;
+  font-weight: 600;
+}
+
+td.empty {
+  text-align: center;
+  color: var(--muted);
+  padding: 2rem;
+}
+
+#team-heading {
+  font-size: 1.1rem;
+  color: var(--green-dark);
+  margin: 1rem 0 0.75rem;
+}
+
+.badge {
+  display: inline-block;
+  padding: 0.2rem 0.6rem;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.badge.home {
+  background: #e8f3ec;
+  color: var(--green-dark);
+}
+
+.badge.away {
+  background: #eef1fb;
+  color: #3b4bb8;
+}
+
+.badge.bye {
+  background: #f1f1f1;
+  color: var(--muted);
+}
+
+.badge.other {
+  background: #f1f1f1;
+  color: var(--muted);
+}
+
+footer {
+  text-align: center;
+  color: var(--muted);
+  font-size: 0.85rem;
+  padding: 1rem 1rem 1.5rem;
+}
+
+.credit {
+  margin: 0;
+}
